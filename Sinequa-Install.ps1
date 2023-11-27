@@ -9,7 +9,8 @@ $SINEQUA_WEBAPP_NAME=
 $SINEQUA_WEBAPP_PORT=
 $SINEQUA_DATAPATH=
 $SINEQUA_SITE_NAME=
-$SINEQUA_SITE_PROTOCOL
+$SINEQUA_SITE_ROOT_PATH='IIS:\Sites\$SINEQUA_SITE_NAME\'
+$SINEQUA_SITE_PROTOCOL=
 
 
 # Install IIS Feature
@@ -72,4 +73,27 @@ cd $SINEQUA_INSTALL_DIRECTORY\SINEQUA\website\bin
 
 # Modify port in config file
 # TODO
+
+# Test if UNC PATH or LOCAL PATH for Virtual Directory
+# Todo : Boucle sur les Virtual Directory pour supprimer les anciens au cas ou
+Remove-WebVirtualDirectory -Site '$SINEQUA_SITE_NAME' -Name $nomduvd -application $nom de la racine (/)
+
+## Create Virtual Directory where physicalpath is an UNC-path (New-WebVirtualDirectory wont do)
+New-Item $SINEQUA_SITE_ROOT_PATH$nomduvd -type VirtualDirectory -physicalPath '$vdphysicalpath'
+  
+
+# Ajout du mot de passe
+Set-WebConfiguration -Filter "/system.applicationHost/sites/site[@name=$SINEQUA_SITE_NAME]/application[@path='/']/virtualDirectory[@path=$nomduvd]" -Value @{userName=$SINEQUA_USER_ACCOUNT; password=$SINEQUA_USER_PASSWORD}
+ 
+# Ajout du SSO
+# TODO
+https://doc.sinequa.com/en.sinequa-es.v11/content/en.sinequa-es.how-to.implement-sso.html
+$iisSiteName = "Default Web Site"
+$iisAppName = "MyApp"
+ 
+Write-Host Disable anonymous authentication
+Set-WebConfigurationProperty -Filter '/system.webServer/security/authentication/anonymousAuthentication' -Name 'enabled' -Value 'false' -PSPath 'IIS:\' -Location "$iisSiteName/$iisAppName"
+ 
+Write-Host Enable windows authentication
+Set-WebConfigurationProperty -Filter '/system.webServer/security/authentication/windowsAuthentication' -Name 'enabled' -Value 'true' -PSPath 'IIS:\' -Location "$iisSiteName/$iisAppName"
 
